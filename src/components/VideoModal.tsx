@@ -13,11 +13,14 @@ interface VideoModalProps {
 export const VideoModal = ({ movie, isOpen, onClose }: VideoModalProps) => {
   const videoRef = useRef<HTMLVideoElement>(null)
 
+  const isStreamtape = movie.videoUrl.includes('streamtape.com')
+  const streamtapeEmbedUrl = isStreamtape ? movie.videoUrl.replace('/v/', '/e/') : ''
+
   useEffect(() => {
-    if (isOpen && videoRef.current) {
+    if (isOpen && videoRef.current && !movie.videoUrl.includes('streamtape.com')) {
       videoRef.current.play()
     }
-  }, [isOpen])
+  }, [isOpen, movie.videoUrl])
 
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -67,16 +70,26 @@ export const VideoModal = ({ movie, isOpen, onClose }: VideoModalProps) => {
 
             {/* Video Player */}
             <div className="relative aspect-video bg-black">
-              <video
-                ref={videoRef}
-                className="w-full h-full"
-                controls
-                poster={movie.thumbnail}
-                playsInline
-              >
-                <source src={movie.videoUrl} type="video/mp4" />
-                Your browser does not support the video tag.
-              </video>
+              {isStreamtape ? (
+                <iframe
+                  src={streamtapeEmbedUrl}
+                  allowFullScreen
+                  allow="autoplay; fullscreen; picture-in-picture"
+                  className="w-full h-full"
+                  title={movie.title}
+                ></iframe>
+              ) : (
+                <video
+                  ref={videoRef}
+                  className="w-full h-full"
+                  controls
+                  poster={movie.thumbnail}
+                  playsInline
+                >
+                  <source src={movie.videoUrl} type="video/mp4" />
+                  Your browser does not support the video tag.
+                </video>
+              )}
             </div>
 
             {/* Movie Info */}
@@ -92,20 +105,26 @@ export const VideoModal = ({ movie, isOpen, onClose }: VideoModalProps) => {
                       {movie.rating}
                     </span>
                     <span>{movie.year}</span>
-                    <span>{movie.duration}</span>
+                    {movie.type === 'tv-show' ? (
+                      <span>{movie.seasons} Seasons</span>
+                    ) : (
+                      <span>{movie.duration}</span>
+                    )}
                   </div>
                 </div>
 
                 {/* Video Controls */}
                 <div className="flex items-center space-x-2">
-                  <select
-                    className="bg-gray-800 text-white rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-600"
-                    defaultValue="english"
-                  >
-                    <option value="english">English</option>
-                    <option value="spanish">Spanish</option>
-                    <option value="french">French</option>
-                  </select>
+                  {!isStreamtape && (
+                    <select
+                      className="bg-gray-800 text-white rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-600"
+                      defaultValue="english"
+                    >
+                      <option value="english">English</option>
+                      <option value="spanish">Spanish</option>
+                      <option value="french">French</option>
+                    </select>
+                  )}
 
                   <Button
                     size="sm"
